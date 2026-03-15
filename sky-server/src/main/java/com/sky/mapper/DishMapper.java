@@ -2,13 +2,10 @@ package com.sky.mapper;
 
 import com.github.pagehelper.Page;
 import com.sky.annotation.AutoFill;
-import com.sky.dto.DishDTO;
 import com.sky.dto.DishPageQueryDTO;
 import com.sky.entity.Dish;
-import com.sky.entity.DishFlavor;
 import com.sky.enumeration.OperationType;
 import com.sky.vo.DishVO;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -37,7 +34,7 @@ public interface DishMapper {
      * @param dishPageQueryDTO
      * @return
      */
-    Page<DishVO> pageQuare(DishPageQueryDTO dishPageQueryDTO);
+    Page<DishVO> pageQuery(DishPageQueryDTO dishPageQueryDTO);
 
     /**
      * 根据id查询菜品和对应的口味数据
@@ -51,12 +48,19 @@ public interface DishMapper {
      * 根据id删除菜品数据
      * @param id
      */
-    /*@Select("delete from dish where id = #{id}")
-    void deletaById(Long id);*/
+    @Select("delete from dish where id = #{id}")
+    void deletaById(Long id);
 
     /**
      * 批量删除菜品
      * @param ids
      */
     void deletaByIds(List<Long> ids);
+
+    /**
+     * 修改菜品数据
+     * @param dish
+     */
+    @AutoFill(value = OperationType.UPDATE)
+    void update(Dish dish);
 }

@@ -67,9 +67,9 @@ public class DishServiceImpl implements DishService {
      * @param dishPageQueryDTO
      */
     @Override
-    public PageResult pageQuare(DishPageQueryDTO dishPageQueryDTO) {
+    public PageResult pageQuery(DishPageQueryDTO dishPageQueryDTO) {
         PageHelper.startPage(dishPageQueryDTO.getPage(), dishPageQueryDTO.getPageSize());
-        Page<DishVO> page = dishMapper.pageQuare(dishPageQueryDTO);
+        Page<DishVO> page = dishMapper.pageQuery(dishPageQueryDTO);
         return new PageResult(page.getTotal(), page.getResult());
     }
 
@@ -102,5 +102,45 @@ public class DishServiceImpl implements DishService {
 
         dishMapper.deletaByIds(ids);
         dishFlavorMapper.deleteByDishIds(ids);
+    }
+
+    /**
+     * 根据id查询菜品和对应的口味数据
+     * @param id
+     * @return
+     */
+    @Override
+    public DishVO getByIdWithFlavor(Long id) {
+        //根据ID查询菜品数据
+        Dish dish = dishMapper.getById(id);
+        //根据菜品ID查询口味数据
+        List<DishFlavor> dishFlavors = dishFlavorMapper.getByDishId(id);
+        //组装VO数据并返回
+        DishVO dishVO = new DishVO();
+        BeanUtils.copyProperties(dish,dishVO);
+        dishVO.setFlavors(dishFlavors);
+        return dishVO;
+    }
+
+    /**
+     * 修改菜品
+     * @param dishDTO
+     */
+    @Override
+    public void updateWithFlavor(DishDTO dishDTO) {
+        //修改菜品表
+        Dish dish = new Dish();
+        BeanUtils.copyProperties(dishDTO,dish);
+        dishMapper.update(dish);
+        //删除口味
+        dishFlavorMapper.deleteByDishId(dishDTO.getId());
+        //插入口味
+        List<DishFlavor> flavors = dishDTO.getFlavors();
+        if(flavors != null && !flavors.isEmpty()){
+            for (DishFlavor flavor : flavors) {
+                flavor.setDishId(dishDTO.getId());
+            }
+            dishFlavorMapper.insertBatch(flavors);
+        }
     }
 }
