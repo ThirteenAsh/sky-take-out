@@ -20,7 +20,7 @@ public class CommonController {
     @ApiOperation("文件上传")
     public Result<String> upload(MultipartFile file){
         log.info("文件上传");
-        String fillPath = "https://www.bytecraft.xin/cai.png";
+        String fillPath = "https://bpic.588ku.com/back_list_pic/21/03/24/9c4af0739524dadc8f9d6b6bd7404634.jpg";
         return Result.success(fillPath);
     }
 
