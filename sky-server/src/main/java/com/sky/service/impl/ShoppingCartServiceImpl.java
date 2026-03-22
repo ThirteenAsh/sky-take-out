@@ -12,7 +12,6 @@ import com.sky.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -102,7 +101,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
 
         List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
 
-        if(list != null && list.size() > 0){
+        if(list != null && !list.isEmpty()){
             shoppingCart = list.get(0);
 
             Integer number = shoppingCart.getNumber();
