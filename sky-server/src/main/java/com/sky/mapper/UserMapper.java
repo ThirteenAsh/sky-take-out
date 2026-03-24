@@ -1,7 +1,6 @@
 package com.sky.mapper;
 
 import com.sky.entity.User;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -17,6 +16,8 @@ public interface UserMapper {
     /*
     * 插入数据
     */
-
     void insert(User user);
+
+
+    User getById(Long userId);
 }
