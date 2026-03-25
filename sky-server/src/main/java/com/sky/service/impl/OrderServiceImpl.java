@@ -131,10 +131,11 @@ public class OrderServiceImpl implements OrderService {
 
         Integer OrderPaidStatus = Orders.PAID; //支付状态，已支付
         Integer OrderStatus = Orders.TO_BE_CONFIRMED;  //订单状态，待接单
+        Long id = orderMapper.getIdByNumber(ordersPaymentDTO.getOrderNumber()); //根据订单号查询订单id
 
         //发现没有将支付时间 check_out属性赋值，所以在这里更新
-        LocalDateTime check_out_time = LocalDateTime.now();
-        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, check_out_time, Long.valueOf(ordersPaymentDTO.getOrderNumber()));
+        LocalDateTime CheckOutTime = LocalDateTime.now();
+        orderMapper.updateStatus(OrderStatus, OrderPaidStatus, CheckOutTime, id);
 
         return vo;
     }

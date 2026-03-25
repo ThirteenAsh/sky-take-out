@@ -31,12 +31,15 @@ public interface OrderMapper {
      */
     void update(Orders orders);
 
+    @Select("select id from orders where number = #{orderNumber}")
+    Long getIdByNumber(String orderNumber);
+
     /**
      * 用于替换微信支付更新数据库状态的问题
      *
      * @param orderStatus
      * @param orderPaidStatus
      */
-    @Update("update orders set status = #{orderStatus},pay_status = #{orderPaidStatus} ,checkout_time = #{check_out_time} where id = #{id}")
-    void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime check_out_time, Long id);
+    @Update("update orders set status = #{orderStatus},pay_status = #{orderPaidStatus} ,checkout_time = #{CheckOutTime} where id = #{id}")
+    void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime CheckOutTime, Long id);
 }
