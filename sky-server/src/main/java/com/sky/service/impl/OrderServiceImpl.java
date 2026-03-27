@@ -14,6 +14,7 @@ import com.sky.exception.BaseException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
+import com.sky.service.AddressBookService;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
@@ -26,7 +27,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +52,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+
+    @Autowired
+    private AddressBookService addressBookService;
 
     /**
      * 用户下单
@@ -85,6 +88,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(Orders.PENDING_PAYMENT);
         orders.setNumber(String.valueOf(System.currentTimeMillis()));
         orders.setPhone(addressBook.getPhone());
+        orders.setAddress(buildFullAddress(addressBook));
         orders.setConsignee(addressBook.getConsignee());
         orders.setUserId(userId);
         orderMapper.insert(orders);
@@ -182,7 +186,8 @@ public class OrderServiceImpl implements OrderService {
      */
     @Cacheable(
             value = "orderCache",
-            key = "T(com.sky.context.BaseContext).getCurrentId() + '_' + #page + '_' + #pageSize + '_' + #status"
+            key = "T(com.sky.context.BaseContext).getCurrentId() + '_' + #page + '_' + #pageSize + '_' + #status",
+            unless = "#result == null"
     )
     @Override
     public PageResult pageQuery4User(Integer page, Integer pageSize, Integer status) {
@@ -315,5 +320,26 @@ public class OrderServiceImpl implements OrderService {
 
         // 将购物车对象批量添加到数据库
         shoppingCartMapper.insertBatch(shoppingCartList);
+    }
+
+    /**
+     * 构造完整的地址信息
+     *
+     * @param addressBook
+     * @return
+     */
+    private String buildFullAddress(AddressBook addressBook) {
+        StringBuilder fullAddress = new StringBuilder();
+        appendIfNotNull(fullAddress, addressBook.getProvinceName());
+        appendIfNotNull(fullAddress, addressBook.getCityName());
+        appendIfNotNull(fullAddress, addressBook.getDistrictName());
+        appendIfNotNull(fullAddress, addressBook.getDetail());
+        return fullAddress.toString();
+    }
+
+    private void appendIfNotNull(StringBuilder builder, String value) {
+        if (value != null && !value.isEmpty()) {
+            builder.append(value);
+        }
     }
 }
