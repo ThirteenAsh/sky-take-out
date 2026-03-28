@@ -71,7 +71,6 @@ public class OrderController {
      */
     @PutMapping("/confirm")
     @ApiOperation("接单")
-    @CacheEvict(value = "orderCache", allEntries = true)
     public Result confirm(@RequestBody OrdersConfirmDTO ordersConfirmDTO) {
         orderService.confirm(ordersConfirmDTO);
         return Result.success();
@@ -84,7 +83,6 @@ public class OrderController {
      */
     @PutMapping("/rejection")
     @ApiOperation("拒单")
-    @CacheEvict(value = "orderCache", allEntries = true)
     public Result rejection(@RequestBody OrdersRejectionDTO ordersRejectionDTO) throws Exception {
         orderService.rejection(ordersRejectionDTO);
         return Result.success();
@@ -97,7 +95,6 @@ public class OrderController {
      */
     @PutMapping("/cancel")
     @ApiOperation("取消订单")
-    @CacheEvict(value = "orderCache", allEntries = true)
     public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) throws Exception {
         orderService.cancel(ordersCancelDTO);
         return Result.success();
@@ -110,7 +107,6 @@ public class OrderController {
      */
     @PutMapping("/delivery/{id}")
     @ApiOperation("派送订单")
-    @CacheEvict(value = "orderCache", allEntries = true)
     public Result delivery(@PathVariable("id") Long id) {
         orderService.delivery(id);
         return Result.success();

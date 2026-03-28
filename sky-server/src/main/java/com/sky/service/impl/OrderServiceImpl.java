@@ -385,6 +385,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param ordersConfirmDTO
      */
+    @CacheEvict(value = "orderCache", allEntries = true)
     public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
         Orders orders = Orders.builder()
                 .id(ordersConfirmDTO.getId())
@@ -399,6 +400,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param ordersRejectionDTO
      */
+    @CacheEvict(value = "orderCache", allEntries = true)
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
         // 根据id查询订单
         Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
@@ -435,6 +437,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param ordersCancelDTO
      */
+    @CacheEvict(value = "orderCache", allEntries = true)
     @Override
     public void cancel(OrdersCancelDTO ordersCancelDTO) {
         // 根据id查询订单
@@ -467,6 +470,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param id
      */
+    @CacheEvict(value = "orderCache", allEntries = true)
     @Override
     public void delivery(Long id) {
         // 根据id查询订单
@@ -502,6 +506,7 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param id
      */
+    @CacheEvict(value = "orderCache", allEntries = true)
     public void complete(Long id) {
         // 根据id查询订单
         Orders ordersDB = orderMapper.getById(id);
