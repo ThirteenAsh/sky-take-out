@@ -83,4 +83,10 @@ public interface OrderMapper {
      * @param map
      */
     Double sumByMap(Map map);
+
+    /**
+     * 根据动态条件统计数量
+     * @param map
+     */
+    Integer countMap(Map map);
 }
