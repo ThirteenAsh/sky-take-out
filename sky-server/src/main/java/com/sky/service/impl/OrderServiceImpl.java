@@ -26,6 +26,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,11 +35,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
+
+    private static final String ORDER_CACHE_PREFIX = "orderCache::";
+    private static final String ORDER_DETAIL_CACHE_PREFIX = "orderDetailCache::order:detail:";
 
     @Autowired
     private OrderMapper orderMapper;
@@ -61,6 +66,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private WeChatPayUtil weChatPayUtil;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
     /**
      * 用户下单
      * @param ordersSubmitDTO
@@ -68,7 +76,6 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     @Transactional
-    @CacheEvict(value = "orderCache", allEntries = true)
     public OrderSubmitVO submitOrder(OrdersSubmitDTO ordersSubmitDTO) {
 
         //处理各种业务异常（地址为空或购物车数据为空）
@@ -109,6 +116,9 @@ public class OrderServiceImpl implements OrderService {
         orderDetailMapper.insertBatch(orderDetailList);
         //清空购物车
         shoppingCartMapper.deleteByUserId(shoppingCart);
+
+        evictOrderCacheByUserId(userId);
+
         return OrderSubmitVO.builder()
                 .id(orders.getId())
                 .orderTime(orders.getOrderTime())
@@ -123,7 +133,6 @@ public class OrderServiceImpl implements OrderService {
      * @param ordersPaymentDTO
      * @return
      */
-    @CacheEvict(value = "orderCache", allEntries = true)
     public OrderPaymentVO payment(OrdersPaymentDTO ordersPaymentDTO) throws Exception {
         // 当前登录用户id
         Long userId = BaseContext.getCurrentId();
@@ -157,6 +166,11 @@ public class OrderServiceImpl implements OrderService {
         LocalDateTime CheckOutTime = LocalDateTime.now();
         orderMapper.updateStatus(OrderStatus, OrderPaidStatus, CheckOutTime, id);
 
+        Orders ordersDB = orderMapper.getById(id);
+        if (ordersDB != null) {
+            evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
+        }
+
         //通过websocket向客户端发送推送消息
         Map map = new HashMap();
         map.put("type", 1); //1表示来电提醒
@@ -187,6 +201,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderMapper.update(orders);
+        evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
     }
 
     /**
@@ -269,7 +284,6 @@ public class OrderServiceImpl implements OrderService {
      * @param id
      */
     @Override
-    @CacheEvict(value = "orderCache", allEntries = true)
     public void userCancelById(Long id) {
         // 根据id查询订单
         Orders ordersDB = orderMapper.getById(id);
@@ -305,6 +319,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setCancelReason("用户取消");
         orders.setCancelTime(LocalDateTime.now());
         orderMapper.update(orders);
+        evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
     }
 
     /**
@@ -400,14 +415,19 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param ordersConfirmDTO
      */
-    @CacheEvict(value = "orderCache", allEntries = true)
     public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
+        Orders ordersDB = orderMapper.getById(ordersConfirmDTO.getId());
+
         Orders orders = Orders.builder()
                 .id(ordersConfirmDTO.getId())
                 .status(Orders.CONFIRMED)
                 .build();
 
         orderMapper.update(orders);
+
+        if (ordersDB != null) {
+            evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
+        }
     }
 
     /**
@@ -415,7 +435,6 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param ordersRejectionDTO
      */
-    @CacheEvict(value = "orderCache", allEntries = true)
     public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
         // 根据id查询订单
         Orders ordersDB = orderMapper.getById(ordersRejectionDTO.getId());
@@ -445,6 +464,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setCancelTime(LocalDateTime.now());
 
         orderMapper.update(orders);
+        evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
     }
 
     /**
@@ -452,7 +472,6 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param ordersCancelDTO
      */
-    @CacheEvict(value = "orderCache", allEntries = true)
     @Override
     public void cancel(OrdersCancelDTO ordersCancelDTO) {
         // 根据id查询订单
@@ -478,6 +497,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setCancelTime(LocalDateTime.now());
 
         orderMapper.update(orders);
+        evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
     }
 
     /**
@@ -485,7 +505,6 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param id
      */
-    @CacheEvict(value = "orderCache", allEntries = true)
     @Override
     public void delivery(Long id) {
         // 根据id查询订单
@@ -514,6 +533,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setStatus(Orders.DELIVERY_IN_PROGRESS);
 
         orderMapper.update(orders);
+        evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
     }
 
     /**
@@ -521,7 +541,6 @@ public class OrderServiceImpl implements OrderService {
      *
      * @param id
      */
-    @CacheEvict(value = "orderCache", allEntries = true)
     public void complete(Long id) {
         // 根据id查询订单
         Orders ordersDB = orderMapper.getById(id);
@@ -538,6 +557,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setDeliveryTime(LocalDateTime.now());
 
         orderMapper.update(orders);
+        evictOrderRelatedCache(ordersDB.getUserId(), ordersDB.getId());
     }
 
     @Override
@@ -578,6 +598,31 @@ public class OrderServiceImpl implements OrderService {
         if (value != null && !value.isEmpty()) {
             builder.append(value);
         }
+    }
+
+    private void evictOrderRelatedCache(Long userId, Long orderId) {
+        evictOrderCacheByUserId(userId);
+        evictOrderDetailCacheByOrderId(orderId);
+    }
+
+    /**
+     * 删除某个用户在订单分页接口下的全部缓存（不同页码/状态）。
+     */
+    private void evictOrderCacheByUserId(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        Set<String> keys = redisTemplate.keys(ORDER_CACHE_PREFIX + userId + "_*");
+        if (!CollectionUtils.isEmpty(keys)) {
+            redisTemplate.delete(keys);
+        }
+    }
+
+    private void evictOrderDetailCacheByOrderId(Long orderId) {
+        if (orderId == null) {
+            return;
+        }
+        redisTemplate.delete(ORDER_DETAIL_CACHE_PREFIX + orderId);
     }
 
     private List<OrderVO> getOrderVOList(Page<Orders> page) {

@@ -79,6 +79,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
         return list;
     }
 
+    //清空购物车
     @Override
     public void cleanShoppingCart() {
         Long currentId = BaseContext.getCurrentId();

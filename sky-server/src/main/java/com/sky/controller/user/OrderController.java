@@ -12,8 +12,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -85,7 +83,6 @@ public class OrderController {
      *
      * @return
      */
-    @CacheEvict(value = "orderCache", allEntries = true)
     @PutMapping("/cancel/{id}")
     @ApiOperation("取消订单")
     public Result cancel(@PathVariable("id") Long id){

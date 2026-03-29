@@ -8,17 +8,8 @@ import com.sky.result.PageResult;
 
 public interface EmployeeService {
 
-    /**
-     * 员工登录
-     * @param employeeLoginDTO
-     * @return
-     */
     Employee login(EmployeeLoginDTO employeeLoginDTO);
 
-    /**
-     * 新增员工
-     * @param employeeDTO
-     */
     void save(EmployeeDTO employeeDTO);
 
     PageResult pageQuary(EmployeePageQueryDTO employeePageQueryDTO);

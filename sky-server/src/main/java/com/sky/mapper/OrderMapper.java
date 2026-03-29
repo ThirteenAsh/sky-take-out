@@ -10,6 +10,7 @@ import org.aspectj.weaver.ast.Or;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface OrderMapper {
@@ -51,7 +52,6 @@ public interface OrderMapper {
      * 订单分页查询
      *
      * @param ordersPageQueryDTO
-     * @return
      */
     Page<Orders> pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
 
@@ -59,7 +59,6 @@ public interface OrderMapper {
      * 根据id查询订单
      *
      * @param id
-     * @return
      */
     @Select("select * from orders where id = #{id}")
     Orders getById(Long id);
@@ -75,8 +74,13 @@ public interface OrderMapper {
      * 根据状态和下单时间查询订单
      * @param status
      * @param orderTime
-     * @return
      */
     @Select("select * from orders where status = #{status} and order_time < #{orderTime}")
     List<Orders> getByStatusAndOrderTimeLT(Integer status, LocalDateTime orderTime);
+
+    /**
+     * 根据动态条件统计数量
+     * @param map
+     */
+    Double sumByMap(Map map);
 }
