@@ -88,7 +88,7 @@ public interface OrderMapper {
      * 根据动态条件统计数量
      * @param map
      */
-    Integer countMap(Map map);
+    Integer countByMap(Map map);
 
     /**
      * 统计指定时间区间内的销量排名

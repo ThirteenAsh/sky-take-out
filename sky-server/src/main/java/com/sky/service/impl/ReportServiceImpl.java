@@ -197,6 +197,6 @@ class ReportServiceImpl implements ReportService{
         map.put("begin", begin);
         map.put("end", end);
         map.put("status", status);
-        return orderMapper.countMap(map);
+        return orderMapper.countByMap(map);
     }
 }

@@ -78,7 +78,7 @@
             </if>
         </where>
     </select>
-    <select id="countMap" resultType="java.lang.Integer">
+    <select id="countByMap" resultType="java.lang.Integer">
         select count(*) from orders
         <where>
             <if test="begin != null">
@@ -106,5 +106,4 @@
         order by number desc
         limit 0,10
     </select>
-
 </mapper>
